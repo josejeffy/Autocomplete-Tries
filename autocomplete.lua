@@ -2,13 +2,20 @@ local Autocomplete = {}
 Autocomplete.root = {}
 
 function Autocomplete:init(filename)
-  for word in io.lines(filename) do
-    Autocomplete:_add(string.lower(word))
+  local file = io.open(filename, 'r')
+  if file then
+    local contents = string.lower(file:read('*all'))
+    file:close()
+    for word in contents:gmatch("([^\n]*)\n?") do
+      Autocomplete:_add(word)
+    end
+  else
+    error('File does not exist')
   end
   return self
 end
 
-function Autocomplete:_reset()
+function Autocomplete:_clear_suggestions()
   self.suggestions = {}
 end
 
@@ -35,10 +42,10 @@ function Autocomplete:_get_subtrie(word)
 end
 
 
-function Autocomplete:_generate_chains(node, prefix)
+function Autocomplete:_generate_suggestions(node, prefix)
   for letter, new_node in pairs(node) do
     if type(new_node) == 'table' then
-      Autocomplete:_generate_chains(new_node, prefix .. letter)
+      Autocomplete:_generate_suggestions(new_node, prefix .. letter)
     else
       table.insert(self.suggestions, prefix)
     end
@@ -46,9 +53,9 @@ function Autocomplete:_generate_chains(node, prefix)
 end
 
 function Autocomplete:complete(search_term)
-  Autocomplete:_reset()
+  Autocomplete:_clear_suggestions()
   local node = Autocomplete:_get_subtrie(search_term)
-  Autocomplete:_generate_chains(node, search_term)
+  Autocomplete:_generate_suggestions(node, search_term)
   return Autocomplete.suggestions
 end
 
