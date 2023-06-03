@@ -1,6 +1,6 @@
 local Autocomplete = {}
 
--- init
+-- initialization
 function Autocomplete:init(filename)
 	self.suggestions = {}
 	self.root = {}
